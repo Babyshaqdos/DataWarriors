@@ -1,0 +1,259 @@
+---
+title: "Introduction to R for statistical analysis"
+output: html_notebook
+---
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+What is R?
+
+R is an Object oriented programming (OOP) language designed primarily for statistical computing and graphical representation.  
+
+What does OOP mean?
+
+Object oriented languages are programming languages that are designed around using data as an "object" rather than being designed around functions or logic. This can be somewhat unintuitive at first but will become clearer in a bit. Basically, what this means is that whenever we compute a result and we want to store that result, we can store it inside of an "object" which can then be used elsewhere in our code. We will see some examples of this down below. 
+
+Why do we use R?
+
+R is increasingly used by data scientists and analysts because it is relatively lightweight, easy to use, and comes with many built in functions specifically designed for data analysis and visualization of data. 
+
+
+
+
+The Basics:
+```{r}
+#The first thing we need to know about R is that while many functions are built into the base R installation, there are many others that are not but these can be easily added to our R environment. Let's start with adding the tidyverse package, which contains the ggplot2 subpackage that we will use later for visualizing our data
+
+install.packages("tidyverse") #This line will install the tidyverse package into the R environment
+
+#Now that we have installed the package into R, we need to tell our program that we plan to use that package in our code
+library("tidyverse")
+
+#Alternatively, if we only wanted to load the ggplot2 package instead of the entire tidyverse package we could run
+#library("ggplot2")
+
+#Before we go further let us run this code and see if our packages are added correctly. You can run this block of code using the run button at the top right of editor, or by hitting ctrl + enter on your keyboard
+#You should see a console at the bottom of your screen, after running this code the console should display the line library("tidyverse")
+```
+
+The Basics Pt2:
+```{r}
+#Now that we have our packages loaded lets dive a bit more into OOP
+#Unlike other languages, when we create a new variable or object we do not need to specify a data type. You may also notice that instead of using "=" to assign the object we use "<-" 
+
+
+#Data Frames are the main storage medium for data in the R environment. They work similarly to tables but do have some unique characteristics we will see later
+
+#Creating an empty data frame
+my_dataframe <- data.frame()
+
+#Creating a data frame with known values
+my_dataframe <- data.frame(Year = c(1:4),
+                               Student_Name = c("John", "Mary", "Jaime", "Mark"),
+                               Grade = c('A', 'B', 'C', 'D'))
+#Now lets view the data frame, we can call the object just by typing its name to see the table displayed in the console. 
+my_dataframe
+
+#This will also display the dataframe but in a new tab instead of in the console
+View(my_dataframe)
+
+#Let's pause a moment and take a look at how we added values to the data frame. 
+
+
+```
+
+
+Importing data
+```{r}
+#Now lets take a look at how we can import data to the R environment for use
+#There are many different packages out there that can be used to read different types of data sheets but the most commonly used format is CSV
+
+#Reading a CSV into a data frame
+imported_dataframe <- read.csv("C:/Users/nicks/Documents/DataWarriors/surveys_new.csv")
+
+#Data check
+View(imported_dataframe)
+
+```
+
+
+
+Working with data
+```{r}
+#Now that we have our data available in R thanks to the imported_dataframe object we can access or change fields
+
+#Lets try to grab all values from the "species_id" column. Note that this returns a data frame containing species_id
+species_dataframe <- imported_dataframe["species_id"] 
+
+#Data Check
+View(species_dataframe)
+class(species_dataframe)
+
+#We can also grab the values for species_id without putting them into a data frame
+species_dataframe_list <- imported_dataframe$species_id
+
+#Data Check
+View(species_dataframe_list)
+class(species_dataframe_list)
+
+
+#Notice that some of the species IDs are duplicates. What if we want to find out how many unique species we have?
+unique_species_df <- unique(species_dataframe, by = "species_id")
+
+#Alternatively if we want a list, we can use the command 
+unique_species_df2 <- species_dataframe[!duplicated(species_dataframe$species_id), ]
+
+#Data Check
+View(unique_species_df)
+View(unique_species_df2)
+
+
+```
+
+
+
+
+Real Use Case
+```{r}
+#Now that we have some background lets take a look at a real use case. 
+
+#Lets say we have 2 CSV files, each contains CDC statistics on HIV cases in Native Americans for the year 2020
+arizona_csv <- read.csv("C:/Users/nicks/Documents/DataWarriors/AZ_HIV.csv")
+illinois_csv <- read.csv("C:/Users/nicks/Documents/DataWarriors/IL_HIV.csv")
+
+#Data Check
+View(arizona_csv)
+View(illinois_csv)
+
+#We can merge them into a single data frame
+AZ_IL_DF <- rbind(arizona_csv, illinois_csv)
+
+#Data Check
+View(AZ_IL_DF)
+
+#Lets say that we only want specific columns
+AZ_IL_DF2 <- select(AZ_IL_DF, Indicator, Geography, Cases, Rate.per.100000, Population)
+
+#Data Check
+View(AZ_IL_DF2)
+
+#Alternatively, we can use the filter function
+AZ_IL_DF3 <- filter(AZ_IL_DF2, Indicator == "HIV prevalence")
+
+View(AZ_IL_DF3)
+
+#Filter() is a very powerful function that can be used to match values throughout the data frame
+AZ_IL_DF4 <- filter(AZ_IL_DF, Rate.per.100000 >= 100)
+
+View(AZ_IL_DF4)
+
+
+#We can also "pipe" select and filter functions together to grab exactly the values we want
+AZ_IL_DF5 <- AZ_IL_DF %>%
+  select(Indicator, Geography, Cases, Rate.per.100000, Population) %>%
+  filter(Cases >= 20)
+
+View(AZ_IL_DF5)
+
+```
+
+
+
+Data Visualization
+```{r}
+#One of the best features of R is the many different options for data plotting. We are going to go through several different examples of plots to get a good feel for just some of the many options you have available to you.
+
+#Lets plot our AZ IL dataframe
+plot1 <- ggplot(data = AZ_IL_DF, mapping = aes(x = Indicator, y = Rate.per.100000, color = Geography)) +
+  geom_point()
+plot1
+
+```
+
+Data Visualization Pt2:
+```{r}
+#Lets switch it up and load a new dataset to explore some more robust plots
+data() #Displays all of the preloaded datasets available in R
+
+library(ratdat) #Dataset for AZ rats in Chihuahuan desert
+?complete
+
+plot2 <- ggplot(data = complete, mapping = aes(x=plot_type, y = weight)) +
+  geom_boxplot()
+plot2
+
+#Lets keep adding to this graph to make it easier to read and understand
+plot2 <- ggplot(data = complete, mapping = aes(x=plot_type, y = weight, color = plot_type)) +
+  geom_boxplot()
+plot2
+
+
+plot2 <- ggplot(data = complete, mapping = aes(x=plot_type, y = weight, fill = plot_type)) + 
+  geom_boxplot()
+plot2
+
+#Either of those options help us to differentiate between the plot types but our labels are a mess
+plot2 <- ggplot(data = complete, mapping = aes(x = plot_type, y = weight, color = plot_type)) +
+  geom_boxplot() + 
+  scale_x_discrete(labels = label_wrap_gen(width = 10))
+plot2
+
+
+#Now that our labels are legible, lets see if we can clear up some of these data points
+plot2 <- ggplot(data = complete, mapping = aes(x=plot_type, y = weight))+
+  geom_boxplot(outlier.shape = NA) + 
+  scale_x_discrete(labels = label_wrap_gen(width= 10)) +
+  geom_jitter(aes(color = plot_type), alpha = 0.2)
+plot2
+
+
+#We are getting closer to a more readable plot but it still needs work. We can change the order of our geom statements to change the order in which they appear on the plot. This allows us to highlight different aspects of our plots
+plot2 <- ggplot(data = complete, mapping = aes(x=plot_type, y = weight)) +
+  geom_jitter(aes(color=plot_type), alpha = 0.2) +
+  geom_boxplot(outlier.shape = NA, fill = NA) +
+  scale_x_discrete(labels = label_wrap_gen(width= 10))
+plot2
+
+```
+
+
+Data Visualization
+```{r}
+
+#Lets see another graph that really helps highlight how powerful ggplot is 
+data("mtcars")
+
+mtcars$`car name` <- rownames(mtcars)  # create new column for car names
+mtcars$mpg_z <- round((mtcars$mpg - mean(mtcars$mpg))/sd(mtcars$mpg), 2)  # compute normalized mpg
+mtcars$mpg_type <- ifelse(mtcars$mpg_z < 0, "below", "above")  # above / below avg flag
+mtcars <- mtcars[order(mtcars$mpg_z), ]  # sort
+mtcars$`car name` <- factor(mtcars$`car name`, levels = mtcars$`car name`)  # convert to factor to retain sorted order in plot.
+
+plot3 <- ggplot(mtcars, aes(x=`car name`, y=mpg_z, label=mpg_z)) + 
+  geom_point(stat='identity', aes(col=mpg_type), size=6)  +
+  scale_color_manual(name="Mileage", 
+                     labels = c("Above Average", "Below Average"), 
+                     values = c("above"="#00ba38", "below"="#f8766d")) + 
+  geom_text(color="white", size=2) +
+  labs(title="Diverging Dot Plot", 
+       subtitle="Normalized mileage from 'mtcars': Dotplot") + 
+  ylim(-2.5, 2.5) +
+  coord_flip()
+
+plot3
+
+
+
+
+
+```
+
+
+
+
+
+References and Materials:
+https://www.michaelc-m.com/Rewrite-R-ecology-lesson/index.html
+https://datascience.arizona.edu/events/data-science-tapas
+http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html
